@@ -1,0 +1,3 @@
+[submodule "tools/auto_buildnumber"]
+	path = tools/auto_buildnumber
+	url = https://github.com/JackGruber/auto_buildnumber
