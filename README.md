@@ -1,13 +1,19 @@
-# ESP32 Timelaps / Webcam
+# ESP32-CAM Timelapse / Webcam
 
-ESP32 Cam project for timelaps and streaming.
+ESP32 Cam project for timelapse and streaming.
 
-The project was started with the code of [bitluni/ESP32CamTimeLapse](https://github.com/bitluni/ESP32CamTimeLapse).
+The project was started with the code of [JackGruber/ESP32-Timelaps-Webcam](https://github.com/JackGruber/ESP32-Timelaps-Webcam).
+
+#TBD
+
+----
 
 <img src="img/http_app.jpg">
 
 ## Functions
-
+* <new>Flash control via UI and ?flash=<value> query parameter
+* <new>mDNS enabled
+* <new>Status LED on the back turns on when recording (dimmed when device is ready)
 * Webpage
 * Rotate Img / Stream
 * Changed values are saved permanently
@@ -18,7 +24,7 @@ The project was started with the code of [bitluni/ESP32CamTimeLapse](https://git
 * Rename `include\wifi_credentials.example` to `include\wifi_credentials.h` and enter your WiFi credentials in the file.
 * Remove the comment for your board in `include\pins_camera.h` and comment all other boards
 
-## Create MP4 from timelaps JPG
+## Create MP4 from timelapse JPG
 
 Converting the images to a video you can use [ffmpeg](https://www.ffmpeg.org/download.html) encoder.
 ```
