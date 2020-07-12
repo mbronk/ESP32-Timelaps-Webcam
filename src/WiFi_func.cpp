@@ -2,8 +2,6 @@
 #include "WiFi_func.h"
 #include "WiFi.h"
 #include "wifi_credentials.h"
-#include <ESPmDNS.h>
-#include "settings.h"
 
 const char* STA_SSID = WIFI_SSID;
 const char* STA_PASSWORD = WIFI_PASSWORD;
@@ -122,19 +120,4 @@ int WiFiDetermineMode(void)
   }
 
   return 0;
-}
-
-void initMDNS() {
-    /*use mdns for host name resolution*/
-  Serial.println("");
-  Serial.println("=======================================");  
-  if (!MDNS.begin(DNS_HOSTNAME)) { //http://<host>.local
-    Serial.println("Error setting up MDNS responder! Halting!");
-    while (1) {
-      delay(1000);
-    }    
-  }
-  Serial.printf("mDNS responder started at: http://%s.local/\n", DNS_HOSTNAME);
-  Serial.println("=======================================");
-  Serial.println("");
 }

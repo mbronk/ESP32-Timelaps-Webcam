@@ -11,9 +11,10 @@ The project was started with the code of [JackGruber/ESP32-Timelaps-Webcam](http
 <img src="img/http_app.jpg">
 
 ## Functions
-* <new>Flash control via UI and ?flash=<value> query parameter
-* <new>mDNS enabled
-* <new>Status LED on the back turns on when recording (dimmed when device is ready)
+* **new** OTA support (incl. password protection & PlatformIO pre-build script reading from wifi_credentials.h)
+* **new** Flash control via UI and ?flash=<value> query parameter
+* **new** mDNS enabled
+* **new** Status LED on the back turns on when recording (dimmed when device is ready)
 * Webpage
 * Rotate Img / Stream
 * Changed values are saved permanently

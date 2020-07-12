@@ -9,6 +9,7 @@
 #include "Pref.h"
 #include "Leds.h"
 #include "mDNS.h"
+#include "OTA.h"
 
 bool STOP_RESET = false;
 unsigned long ESP_RESTART = 0;
@@ -31,7 +32,7 @@ void setup()
   if(CameraLoadSettings()) { Serial.println("Setting Load OK"); };
 
   WiFiInit();
-  initMDNS();
+  initOTA();
 
   HTTPAppStartCameraServer();
   setStatusLedState(StatusLedState::DIMMED);
@@ -51,4 +52,5 @@ void loop()
   {
     ESP.restart();
   }
+  otaHandle();
 }
