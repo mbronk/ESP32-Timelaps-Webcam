@@ -7,4 +7,6 @@ int WiFiDetermineMode(void);
 void WiFiConnectSTA(void);
 void WiFiCreateAP(void);
 
+void initMDNS();
+
 #endif

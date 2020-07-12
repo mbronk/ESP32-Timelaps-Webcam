@@ -53,14 +53,27 @@ bool SDappendFile(const char *path, const unsigned char *data, unsigned long len
 bool SDInitFileSystem()
 {
   Serial.println("Init file system");
+
+  // pinMode(GPIO_NUM_14, PULLUP); // SD_CLK    
+  // pinMode(GPIO_NUM_15, PULLUP); // SD_CMD
+  // pinMode(GPIO_NUM_2, PULLUP);  // SD_DAT0
+  // #ifndef USE_SDMMC_1BIT
+  //   pinMode(GPIO_NUM_4, PULLUP);  // SD_DAT1
+  //   pinMode(GPIO_NUM_12, PULLUP);  // SD_DAT2
+  //   pinMode(GPIO_NUM_13, PULLUP);  // SD_DAT3
+  // #else
+  //   pinMode(GPIO_NUM_4, PULLDOWN);
+  // #endif
+
   #ifdef USE_SDMMC_1BIT
-    if (!SD_MMC.begin("/sdcard",true))
-    {
-      Serial.println("Card Mount Failed (SDMMC_HOST_FLAG_1BIT)");
-      return false;
-    }
+    auto sdStatus = SD_MMC.begin("/sdcard",true);
     pinMode(LED_FLASH, OUTPUT);
     digitalWrite(LED_FLASH, LOW);
+    if (!sdStatus)
+    {      
+      Serial.println("Card Mount Failed (SDMMC_HOST_FLAG_1BIT)");
+      return false;
+    }    
   #else
     if (!SD_MMC.begin())
     {

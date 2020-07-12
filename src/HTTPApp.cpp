@@ -19,10 +19,11 @@
 #include "esp_camera.h"
 #include "Arduino.h"
 
-#include "TimeLaps.h"
+#include "TimeLapse.h"
 #include "HTTPApp.h"
 #include "Pref.h"
 #include "camera.h"
+#include "Leds.h"
 
 const char *indexHtml =
 #include "index.html.h"
@@ -53,6 +54,23 @@ httpd_handle_t camera_httpd = NULL;
 
 extern unsigned long ESP_RESTART;
 
+
+namespace {
+	int getFlashBrightnessQueryParam(httpd_req_t *req) {
+		char buf[100] = {};
+		char flashVal[5] = {};
+
+		if (httpd_req_get_url_query_str(req, buf, sizeof(buf)) == ESP_OK)
+		{
+			if (httpd_query_key_value(buf, "flash", flashVal, sizeof(flashVal) -1) == ESP_OK)
+			{
+				return atoi(flashVal);
+			}			
+		}
+		return -1;
+	}
+}
+
 static size_t HTTPAppJPGEncodeStream(void *arg, size_t index, const void *data, size_t len)
 {
 	jpg_chunking_t *j = (jpg_chunking_t *)arg;
@@ -75,6 +93,10 @@ static esp_err_t HTTPAppHandlerCaptureJPG(httpd_req_t *req)
     size_t fb_len = 0;
     int64_t fr_start = esp_timer_get_time();
 
+	auto flash = getFlashBrightnessQueryParam(req);
+	if(flash != -1) { setFlashLedBrightness(flash); }
+
+	OnAir _;
 	fb = esp_camera_fb_get();
 	if (!fb)
 	{
@@ -109,7 +131,7 @@ static esp_err_t HTTPAppHandlerCaptureJPG(httpd_req_t *req)
 
 static esp_err_t HTTPAppHandlerStartLapse(httpd_req_t *req)
 {
-	if(TimeLapsStart())
+	if(TimeLapseStart())
 	{
 		httpd_resp_send(req, "{\"status\": \"ok\"}", -1);
 		return ESP_OK;
@@ -123,7 +145,7 @@ static esp_err_t HTTPAppHandlerStartLapse(httpd_req_t *req)
 
 static esp_err_t HTTPAppHandlerStopLapse(httpd_req_t *req)
 {
-	if(TimeLapsStop())
+	if(TimeLapseStop())
 	{
 		httpd_resp_send(req, "{\"status\": \"ok\"}", -1);
 		return ESP_OK;
@@ -147,12 +169,17 @@ static esp_err_t HTTPAppHandlerStream(httpd_req_t *req)
         last_frame = esp_timer_get_time();
     }
 
+	auto flash = getFlashBrightnessQueryParam(req);
+	if(flash != -1) { setFlashLedBrightness(flash); }
+
+
     res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
     if(res != ESP_OK){
         return res;
     }
 
 	res = httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+	OnAir _;
     while(true){
         fb = esp_camera_fb_get();
         if (!fb) {
@@ -311,12 +338,16 @@ static esp_err_t HTTPAppHandlerCMD(httpd_req_t *req)
 		res = s->set_ae_level(s, val);
 	else if (!strcmp(variable, "interval"))
 	{
-		TimeLapsSetInterval(val);
+		TimeLapseSetInterval(val);
 		PrefSaveInt("interval",val, true);
 	}
 	else if (!strcmp(variable, "rotate")) 
 	{
 		PrefSaveInt("rotate",val, true);
+	}
+	else if (!strcmp(variable, "flash_value")) {
+		setFlashLedBrightness(val);
+		res = 0;
 	}
 	else
 	{
@@ -368,7 +399,8 @@ static esp_err_t HTTPAppHandlerStatus(httpd_req_t *req)
 	p += sprintf(p, "\"dcw\":%u,", s->status.dcw);
 	p += sprintf(p, "\"colorbar\":%u,", s->status.colorbar);
 	p += sprintf(p, "\"interval\":%d,", PrefLoadInt("interval", 0, true));
-	p += sprintf(p, "\"rotate\":%d", PrefLoadInt("rotate", 0, true) );
+	p += sprintf(p, "\"rotate\":%d,", PrefLoadInt("rotate", 0, true) );
+	p += sprintf(p, "\"flash_value\":%u", getFlashLedBrigthess());
 	*p++ = '}';
 	*p++ = 0;
 	httpd_resp_set_type(req, "application/json");

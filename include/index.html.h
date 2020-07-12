@@ -464,6 +464,12 @@ R"(<!doctype html>
                             <input type="range" id="aec_value" min="0" max="1200" value="204" class="default-action">
                             <div class="range-max">1200</div>
                         </div>
+                        <div class="input-group" id="flash_value-group">
+                            <label for="flash_value">Flash [%]</label>
+                            <div class="range-min">0</div>
+                            <input type="range" id="flash_value" min="0" max="100" value="0" class="default-action">
+                            <div class="range-max">100</div>
+                        </div>
                         <div class="input-group" id="agc-group">
                             <label for="agc">AGC</label>
                             <div class="switch">

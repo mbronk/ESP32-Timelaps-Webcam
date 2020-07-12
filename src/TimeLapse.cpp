@@ -2,6 +2,7 @@
 #include "esp_camera.h"
 #include <stdio.h>
 #include "SD.h"
+#include "Leds.h"
 
 unsigned int fileIndex = 0;
 unsigned int lapseIndex = 0;
@@ -10,12 +11,12 @@ bool mjpeg = true;
 bool lapseRunning = false;
 unsigned long nexttimelaps = 0;
 
-void TimeLapsSetInterval(unsigned long interval)
+void TimeLapseSetInterval(unsigned long interval)
 {
     TIMELAPSINTERVAL = interval;
 }
 
-bool TimeLapsStart()
+bool TimeLapseStart()
 {
     if(lapseRunning) return true;
     fileIndex = 0;
@@ -33,19 +34,20 @@ bool TimeLapsStart()
 	return false;
 }
 
-bool TimeLapsStop()
+bool TimeLapseStop()
 {
     lapseRunning = false;
     return true;
 }
 
-bool TimeLapsProcess()
+bool TimeLapseProcess()
 {
     if(!lapseRunning) return false;
     if(nexttimelaps >  millis() ) return false;
     nexttimelaps = millis() + (1000 * TIMELAPSINTERVAL);
 
     camera_fb_t *fb = NULL;
+    OnAir _;
     fb = esp_camera_fb_get();
     if (!fb)
     {
