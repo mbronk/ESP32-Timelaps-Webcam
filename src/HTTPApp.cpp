@@ -24,6 +24,7 @@
 #include "Pref.h"
 #include "camera.h"
 #include "Leds.h"
+#include "WiFi.h"
 
 const char *indexHtml =
 #include "index.html.h"
@@ -400,7 +401,10 @@ static esp_err_t HTTPAppHandlerStatus(httpd_req_t *req)
 	p += sprintf(p, "\"colorbar\":%u,", s->status.colorbar);
 	p += sprintf(p, "\"interval\":%d,", PrefLoadInt("interval", 0, true));
 	p += sprintf(p, "\"rotate\":%d,", PrefLoadInt("rotate", 0, true) );
-	p += sprintf(p, "\"flash_value\":%u", getFlashLedBrigthess());
+	p += sprintf(p, "\"flash_value\":%u,", getFlashLedBrigthess());
+	p += sprintf(p, "\"WIFI_SSID\":\"%s\",", WiFi.SSID().c_str());
+	p += sprintf(p, "\"WIFI_RSSI\":%d", WiFi.RSSI());
+	//
 	*p++ = '}';
 	*p++ = 0;
 	httpd_resp_set_type(req, "application/json");

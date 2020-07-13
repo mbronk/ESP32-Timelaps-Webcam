@@ -38,6 +38,9 @@ void setup()
   setStatusLedState(StatusLedState::DIMMED);
 }
 
+unsigned long OTA_INTERVAL_SECONDS = 5;
+unsigned long nextOtaCheck = 0;
+
 void loop() 
 {
 	TimeLapseProcess();
@@ -52,5 +55,9 @@ void loop()
   {
     ESP.restart();
   }
-  otaHandle();
+
+  if(nextOtaCheck <=  millis() ) {
+    nextOtaCheck = millis() + (1000 * OTA_INTERVAL_SECONDS);
+    otaHandle();
+  }
 }
