@@ -125,7 +125,7 @@ static esp_err_t HTTPAppHandlerCaptureJPG(httpd_req_t *req)
     }
     esp_camera_fb_return(fb);
     int64_t fr_end = esp_timer_get_time();
-    Serial.printf("JPG: %uKB %ums\n", (uint32_t)(fb_len/1024), (uint32_t)((fr_end - fr_start)/1000));
+    Serial.printf("JPG: %uKB %ums\r\n", (uint32_t)(fb_len/1024), (uint32_t)((fr_end - fr_start)/1000));
     return res;
 }
 
@@ -222,7 +222,7 @@ static esp_err_t HTTPAppHandlerStream(httpd_req_t *req)
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
-        Serial.printf("MJPG: %uKB %ums (%.1ffps)\n",
+        Serial.printf("MJPG: %uKB %ums (%.1ffps)\r\n",
             (uint32_t)(_jpg_buf_len/1024),
             (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
     }
@@ -342,6 +342,11 @@ static esp_err_t HTTPAppHandlerCMD(httpd_req_t *req)
 		TimeLapseSetInterval(val);
 		PrefSaveInt("interval",val, true);
 	}
+	else if (!strcmp(variable, "lapseDuration"))
+	{
+		TimeLapseSetDuration(val);
+		PrefSaveInt("lapseDuration",val, true);
+	}
 	else if (!strcmp(variable, "rotate")) 
 	{
 		PrefSaveInt("rotate",val, true);
@@ -399,8 +404,9 @@ static esp_err_t HTTPAppHandlerStatus(httpd_req_t *req)
 	p += sprintf(p, "\"hmirror\":%u,", s->status.hmirror);
 	p += sprintf(p, "\"dcw\":%u,", s->status.dcw);
 	p += sprintf(p, "\"colorbar\":%u,", s->status.colorbar);
-	p += sprintf(p, "\"interval\":%d,", PrefLoadInt("interval", 0, true));
-	p += sprintf(p, "\"rotate\":%d,", PrefLoadInt("rotate", 0, true) );
+	p += sprintf(p, "\"interval\":%d,", PrefLoadInt("interval", 1, true));
+	p += sprintf(p, "\"lapseDuration\":%d,", PrefLoadInt("lapseDuration", 1, true));
+	p += sprintf(p, "\"rotate\":%d,", PrefLoadInt("rotate", 90, true) );
 	p += sprintf(p, "\"flash_value\":%u,", getFlashLedBrigthess());
 	p += sprintf(p, "\"WIFI_SSID\":\"%s\",", WiFi.SSID().c_str());
 	p += sprintf(p, "\"WIFI_RSSI\":%d", WiFi.RSSI());
@@ -480,7 +486,7 @@ void HTTPAppStartCameraServer()
 		.handler = HTTPAppHandlerResetPref,
 		.user_ctx = NULL};	
 
-	Serial.printf("Starting web server on port: '%d'\n", config.server_port);
+	Serial.printf("Starting web server on port: '%d'\r\n", config.server_port);
 	if (httpd_start(&camera_httpd, &config) == ESP_OK)
 	{
 		httpd_register_uri_handler(camera_httpd, &index_uri);
@@ -495,7 +501,7 @@ void HTTPAppStartCameraServer()
 
 	config.server_port += 1;
 	config.ctrl_port += 1;
-	Serial.printf("Starting stream server on port: '%d'\n", config.server_port);
+	Serial.printf("Starting stream server on port: '%d'\r\n", config.server_port);
 	if (httpd_start(&stream_httpd, &config) == ESP_OK)
 	{
 		httpd_register_uri_handler(stream_httpd, &stream_uri);

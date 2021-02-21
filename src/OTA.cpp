@@ -11,7 +11,10 @@ void initOTA() {
 
   
   ArduinoOTA.setHostname(DNS_HOSTNAME); // If unset, Hostname defaults to esp3232-[MAC]
-  ArduinoOTA.setPassword(OTA_PASSWORD);
+  #ifndef OTA_PASSWORD_NEW
+    #define OTA_PASSWORD_NEW OTA_PASSWORD
+  #endif
+  ArduinoOTA.setPassword(OTA_PASSWORD_NEW);
   // Password can be set with it's md5 value as well
   // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
   // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
@@ -45,9 +48,8 @@ void initOTA() {
   ArduinoOTA.begin();
 
   Serial.println("OTA Ready");
-  Serial.printf("mDNS responder started at: http://%s.local/\n", DNS_HOSTNAME);
+  Serial.printf("mDNS responder started at: http://%s.local/\r\n", DNS_HOSTNAME);
   Serial.println("=======================================");
-  Serial.println("");
 }
 
 void otaHandle() {

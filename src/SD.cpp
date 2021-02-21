@@ -4,7 +4,7 @@
 bool SDWriteFile(const char *path, const unsigned char *data, unsigned long len)
 {
   int64_t start = esp_timer_get_time();
-  Serial.printf("Writing file: %s\n", path);
+  Serial.printf("Writing file: %s\r\n", path);
   File file = SD_MMC.open(path, FILE_WRITE);
   if (!file)
   {
@@ -15,7 +15,7 @@ bool SDWriteFile(const char *path, const unsigned char *data, unsigned long len)
   {
     int64_t end = esp_timer_get_time();
     int64_t time = (end - start) / 1000;
-    Serial.printf("File written: %ums \n",(uint32_t)time);
+    Serial.printf("File written: %ums \r\n",(uint32_t)time);
     Serial.println("File written");
   }
   else
@@ -29,7 +29,7 @@ bool SDWriteFile(const char *path, const unsigned char *data, unsigned long len)
 
 bool SDappendFile(const char *path, const unsigned char *data, unsigned long len)
 {
-  Serial.printf("Appending to file: %s\n", path);
+  Serial.printf("Appending to file: %s\r\n", path);
 
   File file = SD_MMC.open(path, FILE_APPEND);
   if (!file)
@@ -99,15 +99,17 @@ bool SDInitFileSystem()
     Serial.println("UNKNOWN");
 
   uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-  Serial.printf("SD Card Size: %lluMB\n", cardSize);
-  Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
-  Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
+  Serial.printf("SD Card Size: %lluMB\r\n", cardSize);
+  Serial.printf("Total space: %lluMB\r\n", SD_MMC.totalBytes() / (1024 * 1024));
+  Serial.printf("Used space: %lluMB\r\n", SD_MMC.usedBytes() / (1024 * 1024));
+  Serial.println("=======================================");
+  Serial.println("");
   return true;
 }
 
 bool SDCreateDir(const char *path)
 {
-  Serial.printf("Creating Dir: %s\n", path);
+  Serial.printf("Creating Dir: %s\r\n", path);
   if (SD_MMC.mkdir(path))
   {
     Serial.println("Dir created");

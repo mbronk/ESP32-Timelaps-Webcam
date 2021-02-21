@@ -3,6 +3,7 @@
 #include "esp_camera.h"
 #include "pins_camera.h"
 #include "Pref.h"
+#include "TimeLapse.h"
 
 bool CameraInit(void)
 {
@@ -26,12 +27,12 @@ bool CameraInit(void)
     .pin_pclk = PIN_CAM_PCLK,
 
     //XCLK 20MHz or 10MHz for OV2640 double FPS (Experimental)
-    .xclk_freq_hz = 20000000,
+    .xclk_freq_hz = 20000000,  //test decrease - was 20000000
     .ledc_timer = LEDC_TIMER_0,
     .ledc_channel = LEDC_CHANNEL_0,
 
-    .pixel_format = PIXFORMAT_JPEG,//YUV422,GRAYSCALE,RGB565,JPEG
-    .frame_size = FRAMESIZE_UXGA,//QQVGA-QXGA Do not use sizes above QVGA when not JPEG
+    .pixel_format = PIXFORMAT_JPEG, // PIXFORMAT_JPEG,//YUV422,GRAYSCALE,RGB565,JPEG
+    .frame_size = FRAMESIZE_SXGA, //FRAMESIZE_UXGA,//QQVGA-QXGA Do not use sizes above QVGA when not JPEG
 
     .jpeg_quality = 12, //0-63 lower number means higher quality
     .fb_count = 1 //if more than one, i2s runs in continuous mode. Use only with JPEG
@@ -42,9 +43,11 @@ bool CameraInit(void)
   if (psramFound())
   {
     Serial.println("PSRAM found");
-    camera_config.frame_size = FRAMESIZE_UXGA;
-    camera_config.jpeg_quality = 10;
-    camera_config.fb_count = 2;
+    if(camera_config.pixel_format == PIXFORMAT_JPEG) {
+      camera_config.frame_size = FRAMESIZE_SXGA; // FRAMESIZE_UXGA;
+      camera_config.jpeg_quality = 12;
+      camera_config.fb_count = 2;
+    }
   }
   else
   {
@@ -54,6 +57,13 @@ bool CameraInit(void)
     camera_config.fb_count = 1;
   }
 
+  //power cycle the camera
+  if(PIN_CAM_PWDN != -1)
+  {
+    pinMode(PIN_CAM_PWDN, OUTPUT);
+    digitalWrite(PIN_CAM_PWDN, HIGH);
+  }
+  delay(1000);
 
   //power up the camera if PWDN pin is defined
   if(PIN_CAM_PWDN != -1)
@@ -61,17 +71,39 @@ bool CameraInit(void)
     pinMode(PIN_CAM_PWDN, OUTPUT);
     digitalWrite(PIN_CAM_PWDN, LOW);
   }
+  delay(1000);
 
 
   // camera init
-  esp_err_t err = esp_camera_init(&camera_config);
+  const int MAX_INIT_ATTEMPTS=5;
+  esp_err_t err = ESP_ERR_CAMERA_NOT_DETECTED;
+  for(int attempt=1; attempt<=MAX_INIT_ATTEMPTS; ++attempt)
+  {
+    Serial.printf("Initializing camera...\r\n");
+    err = esp_camera_init(&camera_config);
+    if (err == ESP_OK)
+    {
+      Serial.printf("Camera init complete\r\n");
+      break;
+    }
+    Serial.printf("\r\nCamera init attempt %d of %d has failed with error: 0x%x\r\n", attempt, MAX_INIT_ATTEMPTS, err);
+
+    if(attempt < MAX_INIT_ATTEMPTS) {
+      esp_camera_deinit();
+      delay(500*attempt);
+      //RESET DEVICE
+    }
+  }
+
   if (err != ESP_OK)
   {
-    Serial.printf("Camera init failed with error 0x%x", err);
+    Serial.printf("\r\nCamera init has failed with error: 0x%x\r\n", err);
     return false;
   }
 
   sensor_t *camera_sensor = esp_camera_sensor_get();
+  Serial.printf("Camera sensor PID: 0x%x\r\n", camera_sensor->id.PID);
+
   //initial sensors are flipped vertically and colors are a bit saturated
   if (camera_sensor->id.PID == OV3660_PID)
   {
@@ -79,10 +111,19 @@ bool CameraInit(void)
     camera_sensor->set_brightness(camera_sensor, 1);  //up the blightness just a bit
     camera_sensor->set_saturation(camera_sensor, -2); //lower the saturation
   }
+
+  if (camera_sensor->id.PID == OV2640_PID)
+  {
+    // camera_sensor->set_hmirror(camera_sensor, 1);
+    // camera_sensor->set_vflip(camera_sensor, 1);      //flip it back
+    // camera_sensor->set_brightness(camera_sensor, 1);  //up the blightness just a bit
+    // camera_sensor->set_saturation(camera_sensor, -2); //lower the saturation
+  }
+  //OV2640_PID
   
   #if defined(CAMERA_MODEL_M5STACK_WIDE)
-    camera_sensor->set_vflip(s, 1);
-    camera_sensor->set_hmirror(s, 1);
+    camera_sensor->set_vflip(camera_sensor, 1);
+    camera_sensor->set_hmirror(camera_sensor, 1);
   #endif
 
   return true;
@@ -92,9 +133,8 @@ bool CameraLoadSettings(void)
 {
   sensor_t *s = esp_camera_sensor_get();
   PrefInit();
-  
-  if(s->set_framesize(s, (framesize_t) PrefLoadInt("framesize", 10, false))) { return false; }
   if(s->set_quality(s, PrefLoadInt("quality", 10, false))) { return false; }
+  if(s->set_framesize(s, (framesize_t) PrefLoadInt("framesize", 9, false))) { return false; }
   if(s->set_contrast(s, PrefLoadInt("contrast", 0, false))) { return false; }
   if(s->set_brightness(s, PrefLoadInt("brightness", 0, false))) { return false; }
   if(s->set_saturation(s, PrefLoadInt("saturation", 0, false))) { return false; }
@@ -117,7 +157,11 @@ bool CameraLoadSettings(void)
   if(s->set_wb_mode(s, PrefLoadInt("wb_mode", 0, false))) { return false; }
   if(s->set_awb_gain(s, PrefLoadInt("awb_gain", 1, false))) { return false; }
   if(s->set_ae_level(s, PrefLoadInt("ae_level", 0, false))) { return false; }
-  if(s->set_sharpness(s, PrefLoadInt("sharpness", 0, false))) { return false; }
+  // if(s->set_sharpness(s, PrefLoadInt("sharpness", 0, false))) { return false; }
+
+	TimeLapseSetInterval(PrefLoadInt("interval", 30, true));
+  TimeLapseSetDuration(PrefLoadInt("lapseDuration", 5, true));
+	// PrefLoadInt("rotate", 90, true);
 
   PrefEnd();
   return true;
@@ -152,7 +196,13 @@ bool CameraSaveSettings(void)
   PrefSaveInt("wb_mode", s->status.wb_mode,false);  
   PrefSaveInt("awb_gain", s->status.awb_gain,false);  
   PrefSaveInt("ae_level", s->status.ae_level,false);  
-  PrefSaveInt("sharpness", s->status.sharpness,false);  
+  // PrefSaveInt("sharpness", s->status.sharpness,false);  
+
+	PrefSaveInt("interval", TimeLapseGetInterval(), false);
+  PrefSaveInt("lapseDuration", TimeLapseGetDuration(), false);
+
+	// PrefSaveInt("lapseDuration", 1, true);
+	// PrefSaveInt("rotate", 90, true);
 
   PrefEnd();
   return true;

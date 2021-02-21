@@ -17,7 +17,9 @@ unsigned long ESP_RESTART = 0;
 
 void setup() 
 {  
+  bool allOK=true;
   Serial.begin(115200);
+  Serial.println("=======================================");
   Serial.println("ESP32 Timelapse Webcam");
   Serial.println("Sketch: " VERSION_MAJOR "." VERSION_MINOR "." VERSION_PATCH "." BUILD_COMMIT "-" BUILD_BRANCH);
   Serial.println("Builddate: " BUILD_DATE " " BUILD_TIME);
@@ -26,16 +28,29 @@ void setup()
 
   if (PrefLoadInt("clearsettings",1,true)) { PrefClear(); }
   PrefSaveInt("clearsettings",1 , true);
-
-  SDInitFileSystem();
-  CameraInit();
-  if(CameraLoadSettings()) { Serial.println("Setting Load OK"); };
-
+  
   WiFiInit();
   initOTA();
 
+
+  SDInitFileSystem();
+  if(!CameraInit()) {
+    Serial.println("Failed initializing camera - server will be defunct");
+    ESP_RESTART = millis() + 20000; //self restart in 20 s
+    allOK = false;
+  } else {
+    if(CameraLoadSettings()) { 
+      Serial.println("Setting Load OK"); 
+    } else { 
+      Serial.println("Setting Load FAILED"); 
+      allOK = false;
+    }
+  }
+
   HTTPAppStartCameraServer();
-  setStatusLedState(StatusLedState::DIMMED);
+  if(allOK) {
+    setStatusLedState(StatusLedState::DIMMED);
+  }
 }
 
 unsigned long OTA_INTERVAL_SECONDS = 5;

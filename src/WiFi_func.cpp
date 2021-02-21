@@ -13,25 +13,40 @@ void WiFiInit(void)
   Serial.println("WiFi connected");
   if(WiFiDetermineMode() == 1)
   {
-    WiFiConnectSTA();
+    if(WiFiConnectSTA()) {
+      return;  //otherwise fall back to AP mode
+    }
   }
-  else
-  {
-    WiFiCreateAP();
-  }
+  
+  WiFiCreateAP();
 }
 
-void WiFiConnectSTA(void)
+bool WiFiConnectSTA(void)
 {
-  Serial.print("Connect WiFi ..");
+  const int MAX_ATTEMPTS=5;
+  for(int attempt=1; attempt<=MAX_ATTEMPTS; ++attempt) {
+    Serial.printf("Connecting to WiFi %s (attempt %d)..", STA_SSID, attempt);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(STA_SSID, STA_PASSWORD);
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(STA_SSID, STA_PASSWORD);
+    long msecsToWait = 5*attempt*1000;
+    long msecsElapsed = 0;
+    while (WiFi.status() != WL_CONNECTED && msecsElapsed < msecsToWait)
+    {
+      delay(500);
+      msecsElapsed += 500;
+      Serial.print(".");
+    }
 
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
+    if(WiFi.status() == WL_CONNECTED) { break; }
+
+    WiFi.disconnect(true);
+    Serial.printf("\r\nConnection attempt %d out of %d failed\r\n", attempt, MAX_ATTEMPTS);
+  }
+
+  if(WiFi.status() != WL_CONNECTED) {
+    Serial.printf("Wifi client connection failed with error %d\r\n", WiFi.status());
+    return false;
   }
 
   Serial.println("");
@@ -46,6 +61,7 @@ void WiFiConnectSTA(void)
   Serial.print("Gateway: ");
   Serial.println(WiFi.gatewayIP());
   Serial.println("=======================================");
+  return true;
 }
 
 void WiFiCreateAP(void)

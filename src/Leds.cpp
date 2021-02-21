@@ -67,7 +67,7 @@ void setStatusLedState(StatusLedState st)
 void setFlashLedBrightness(uint8_t brigthnessPercent)
 {
     #ifdef USE_SDMMC_1BIT
-        Serial.printf("DutyCycle: %d\n", _brightnessToDutyCycle(brigthnessPercent));
+        Serial.printf("DutyCycle: %d\r\n", _brightnessToDutyCycle(brigthnessPercent));
         ledcWrite(PWM_CHANNEL_FLASH, _brightnessToDutyCycle(brigthnessPercent));
     #endif
 }

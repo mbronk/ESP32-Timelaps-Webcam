@@ -370,6 +370,11 @@ R"(<!doctype html>
                 <div id="sidebar">
                     <input type="checkbox" id="nav-toggle-cb" checked="checked">
                     <nav id="menu">
+                        <section id="buttons">
+                            <button id="get-still">Get Still</button>
+                            <button id="toggle-lapse">Start Time-Lapse</button>
+                            <button id="toggle-stream">Start Stream</button>
+                        </section>
                         <div class="input-group" id="framesize-group">
                             <label for="framesize">Resolution</label>
                             <select id="framesize" class="default-action">
@@ -541,8 +546,8 @@ R"(<!doctype html>
                         <div class="input-group" id="rotate-group">
                             <label for="rotate">Rotate</label>
                             <select id="rotate" class="default-action">
-                                <option value="0" selected="selected">0</option>
-                                <option value="90">90</option>
+                                <option value="0">0</option>
+                                <option value="90" selected="selected">90</option>
                                 <option value="180">180</option>
                                 <option value="270">270</option>
                             </select>
@@ -551,11 +556,10 @@ R"(<!doctype html>
                             <label for="interval">Time-Lapse Interval [seconds]</label>
                             <input type="number" id="interval" min="0" max="86400" value="1" class="default-action">
                         </div>
-                        <section id="buttons">
-                            <button id="get-still">Get Still</button>
-                            <button id="toggle-lapse">Start Time-Lapse</button>
-                            <button id="toggle-stream">Start Stream</button>
-                        </section>
+                        <div class="input-group" id="interval-group2">
+                            <label for="lapseDuration">Time-Lapse Duration [minutes]</label>
+                            <input type="number" id="lapseDuration" min="0" max="86400" value="1" class="default-action">
+                        </div>
                         <section id="buttons">
                             <button id="resetpref">Reset Settings</button>
                         </section>

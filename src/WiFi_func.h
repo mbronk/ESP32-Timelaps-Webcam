@@ -4,7 +4,7 @@
 
 void WiFiInit(void);
 int WiFiDetermineMode(void);
-void WiFiConnectSTA(void);
+bool WiFiConnectSTA(void);
 void WiFiCreateAP(void);
 
 
